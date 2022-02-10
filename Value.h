@@ -7,7 +7,6 @@
 template<typename>
 struct DefaultEventManager;
 
-namespace Values {}
 
 struct IValue
 {
@@ -112,6 +111,7 @@ struct Value : public IValueT<T, Value<T, ContainerType>, ContainerType>
       return get();
     }
 };
+
 
 template<typename T, typename BufferType, template<class...> class ContainerType>
 struct BufferedValue : public IValueT<T, BufferedValue<T, BufferType, ContainerType>, ContainerType>

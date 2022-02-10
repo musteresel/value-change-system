@@ -34,11 +34,6 @@ struct EventManagerRef {
   }
 };
 
-
-namespace Values {
-  using DefaultEventManager = EventManagerRef;
-}
-
 template<typename>
 struct DefaultEventManager {
   using type = EventManagerRef;
