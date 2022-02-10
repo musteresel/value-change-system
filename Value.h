@@ -4,8 +4,11 @@
 #include <utility>
 
 
-template<typename>
-struct DefaultEventManager;
+template<typename X, typename...>
+struct DefaultEventManager
+{
+  using type = typename X::PLEASE_IMPLEMENT_SPEC_IN_USER_CODE;
+};
 
 
 struct IValue

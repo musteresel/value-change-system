@@ -35,8 +35,8 @@ struct EventManagerRef {
   }
 };
 
-template<typename>
-struct DefaultEventManager {
+template<typename X>
+struct DefaultEventManager<X> {
   using type = EventManagerRef;
 };
 
