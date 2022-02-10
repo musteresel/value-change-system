@@ -3,19 +3,9 @@
 #include <cassert>
 #include <utility>
 
-template
-<
-  template<class...> class T,
-  typename... Args
->
-struct lazy_template {
-  using instantiated = T<Args...>;
-};
 
-
-
-template<typename...>
-struct DefaultEventManager {};
+template<typename>
+struct DefaultEventManager;
 
 namespace Values {}
 
@@ -96,8 +86,8 @@ struct IValueT : public IValue
 };
 
 
-template<typename T, template<class...> class ContainerType, typename DefaultEventManager>
-struct Value : public IValueT<T, Value<T, ContainerType, DefaultEventManager>, ContainerType>
+template<typename T, template<class...> class ContainerType>
+struct Value : public IValueT<T, Value<T, ContainerType>, ContainerType>
 {
   protected:
     T value_;
@@ -106,7 +96,7 @@ struct Value : public IValueT<T, Value<T, ContainerType, DefaultEventManager>, C
     template<typename... Args>
     explicit Value(Args && ... args) : value_(std::forward<Args>(args)...) {}
 
-    template<typename X, typename EventManager = DefaultEventManager>
+    template<typename X, typename EventManager = typename DefaultEventManager<X>::type>
     void changeTo(X && x, EventManager em = EventManager{})
     {
       value_ = std::forward<X>(x);
@@ -123,8 +113,8 @@ struct Value : public IValueT<T, Value<T, ContainerType, DefaultEventManager>, C
     }
 };
 
-template<typename T, typename BufferType, template<class...> class ContainerType, typename DefaultEventManager>
-struct BufferedValue : public IValueT<T, BufferedValue<T, BufferType, ContainerType, DefaultEventManager>, ContainerType>
+template<typename T, typename BufferType, template<class...> class ContainerType>
+struct BufferedValue : public IValueT<T, BufferedValue<T, BufferType, ContainerType>, ContainerType>
 {
   protected:
     T value_;
@@ -140,7 +130,7 @@ struct BufferedValue : public IValueT<T, BufferedValue<T, BufferType, ContainerT
     template<typename... Args>
     explicit BufferedValue(Args && ... args) : value_(std::forward<Args>(args)...) {}
 
-    template<typename X, typename EventManager = DefaultEventManager>
+    template<typename X, typename EventManager = typename DefaultEventManager<X>::type>
     void changeTo(X && x, EventManager em = EventManager{})
     {
       buffer_.emplace_back(std::forward<X>(x));

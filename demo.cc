@@ -39,8 +39,8 @@ namespace Values {
   using DefaultEventManager = EventManagerRef;
 }
 
-template<>
-struct DefaultEventManager<IValue> {
+template<typename>
+struct DefaultEventManager {
   using type = EventManagerRef;
 };
 
@@ -79,7 +79,7 @@ auto make_lazy(Fn && fn)
 
 
 template<typename T>
-using val = Value<T, std::vector, EventManagerRef>;
+using val = Value<T, std::vector>;
 
 val<int> foo(5);
 val<double> bar(3.4);
