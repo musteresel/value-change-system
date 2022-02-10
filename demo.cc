@@ -1,9 +1,11 @@
 #include "Value.h"
+#include "BufferedValue.h"
 #include "Lazy.h"
 #include <vector>
 #include <iostream>
 #include <functional>
 
+using namespace Values;
 
 struct EventManager {
   static EventManager & getInstance() {
@@ -13,17 +15,18 @@ struct EventManager {
 
   void enqueueIValueChange(IValue & value) {
     std::cout << "Enqueue change of " << &value << std::endl;
-    changes_.emplace_back(std::ref(value));
+    changes_.emplace_back(&value);
   }
 
-  std::vector<std::reference_wrapper<IValue>> changes_;
+  std::vector<IValue *> changes_;
 
   void handleChanges() {
     for (auto v : changes_) {
-      v.get().handleChange();
+      v->handleChange();
     }
     for (auto v : changes_) {
-      v.get().completeChange();
+      std::cout << "Complete change of " << v << std::endl;
+      v->completeChange();
     }
     changes_.clear();
   }
@@ -35,19 +38,40 @@ struct EventManagerRef {
   }
 };
 
+namespace Values {
 template<typename X>
-struct DefaultEventManager<X> {
+struct DefaultChangeManager<X> {
   using type = EventManagerRef;
 };
-
+}
 
 template<typename T>
 using val = Value<T, std::vector>;
 
+template<typename T>
+struct vec_wrap : public std::vector<T>
+{
+  void drop_first() {
+    this->erase(this->begin());
+  }
+
+  T const & first() const {
+    return *(this->cbegin());
+  }
+
+  void insert(T t) {
+    this->push_back(std::move(t));
+  }
+};
+
+template<typename T>
+using bval = BufferedValue<T, vec_wrap<T>, std::vector>;
+
 val<int> foo(5);
 val<double> bar(3.4);
+bval<int> buffered_int(0);
 
-struct Dummy : val<int>::Observer
+struct Dummy : val<int>::IObserver
 {
   void onChange(val<int> &) override {
     std::cout << "Changed!" << std::endl;
@@ -70,7 +94,7 @@ int main()
   val<decltype(l)> xyz(l);
   xyz.changeTo(make_lazy<int>(std::function<int()>{[]() { std::cout << "foo" << std::endl; return 21; }}));
 
-  struct : val<decltype(l)>::Observer {
+  struct : val<decltype(l)>::IObserver {
     void onChange(val<decltype(l)> & v) override {
       std::cout << "Changed the lazy thing!" << std::endl;
       std::cout << "is now: " << v.get().get() << std::endl;
@@ -96,6 +120,24 @@ int main()
   };
 
   U u;
+
+  EventManager::getInstance().handleChanges();
+
+
+  std::cout << "----" << std::endl;
+
+  struct X {
+    bval<int>::MemFnObserver<X> obs_;
+    X() : obs_(this, &X::change, buffered_int) {}
+    void change(bval<int> & b) {
+      std::cout << "Changes from " << b.now() << " to " << b.then() << std::endl;
+    }
+  };
+
+  X x;
+
+  buffered_int.changeTo(21);
+  buffered_int.changeTo(42);
 
   EventManager::getInstance().handleChanges();
 }
