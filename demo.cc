@@ -3,18 +3,19 @@
 #include <iostream>
 #include <functional>
 
+
 struct EventManager {
   static EventManager & getInstance() {
     static EventManager instance;
     return instance;
   }
 
-  void enqueueIValueChange(IValue<EventManager> & value) {
+  void enqueueIValueChange(IValue & value) {
     std::cout << "Enqueue change of " << &value << std::endl;
     changes_.emplace_back(std::ref(value));
   }
 
-  std::vector<std::reference_wrapper<IValue<EventManager>>> changes_;
+  std::vector<std::reference_wrapper<IValue>> changes_;
 
   void handleChanges() {
     for (auto v : changes_) {
@@ -27,7 +28,21 @@ struct EventManager {
   }
 };
 
+struct EventManagerRef {
+  void enqueueIValueChange(IValue & value) {
+    EventManager::getInstance().enqueueIValueChange(value);
+  }
+};
 
+
+namespace Values {
+  using DefaultEventManager = EventManagerRef;
+}
+
+template<>
+struct DefaultEventManager<IValue> {
+  using type = EventManagerRef;
+};
 
 template<typename T, typename Fn>
 class Lazy {
@@ -64,7 +79,7 @@ auto make_lazy(Fn && fn)
 
 
 template<typename T>
-using val = Value<T, std::vector, EventManager>;
+using val = Value<T, std::vector, EventManagerRef>;
 
 val<int> foo(5);
 val<double> bar(3.4);

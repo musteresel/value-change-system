@@ -3,21 +3,35 @@
 #include <cassert>
 #include <utility>
 
-template<typename EventManager>
+template
+<
+  template<class...> class T,
+  typename... Args
+>
+struct lazy_template {
+  using instantiated = T<Args...>;
+};
+
+
+
+template<typename...>
+struct DefaultEventManager {};
+
+namespace Values {}
+
 struct IValue
 {
-  friend EventManager;
+  virtual void handleChange() = 0;
+
+  virtual void completeChange() {};
+
+  template<typename EventManager>
+  void enqueueChangeWith(EventManager & em)
+  {
+    em.enqueueIValueChange(*this);
+  }
 
   protected:
-    virtual void handleChange() = 0;
-
-    virtual void completeChange() {};
-
-    void enqueueChange()
-    {
-      EventManager::getInstance().enqueueIValueChange(*this);
-    }
-    
     // C.35 from C++ Core Guidelines: Protected non-virtual destructor to
     // avoid destruction of an child class object through a pointer to this
     // (parent) class. 
@@ -25,8 +39,8 @@ struct IValue
 };
 
 
-template<typename T, typename Self, template<class...> class ContainerType, typename EventManager>
-struct IValueT : public IValue<EventManager>
+template<typename T, typename Self, template<class...> class ContainerType>
+struct IValueT : public IValue
 {
   public:
     struct Observer
@@ -82,8 +96,8 @@ struct IValueT : public IValue<EventManager>
 };
 
 
-template<typename T, template<class...> class ContainerType, typename EventManager>
-struct Value : public IValueT<T, Value<T, ContainerType, EventManager>, ContainerType, EventManager>
+template<typename T, template<class...> class ContainerType, typename DefaultEventManager>
+struct Value : public IValueT<T, Value<T, ContainerType, DefaultEventManager>, ContainerType>
 {
   protected:
     T value_;
@@ -92,11 +106,11 @@ struct Value : public IValueT<T, Value<T, ContainerType, EventManager>, Containe
     template<typename... Args>
     explicit Value(Args && ... args) : value_(std::forward<Args>(args)...) {}
 
-    template<typename X>
-    void changeTo(X && x)
+    template<typename X, typename EventManager = DefaultEventManager>
+    void changeTo(X && x, EventManager em = EventManager{})
     {
       value_ = std::forward<X>(x);
-      IValue<EventManager>::enqueueChange();
+      this->enqueueChangeWith(em);
     }
 
     T const & get() const
@@ -109,8 +123,8 @@ struct Value : public IValueT<T, Value<T, ContainerType, EventManager>, Containe
     }
 };
 
-template<typename T, typename BufferType, template<class...> class ContainerType, typename EventManager>
-struct BufferedValue : public IValueT<T, BufferedValue<T, BufferType, ContainerType, EventManager>, ContainerType, EventManager>
+template<typename T, typename BufferType, template<class...> class ContainerType, typename DefaultEventManager>
+struct BufferedValue : public IValueT<T, BufferedValue<T, BufferType, ContainerType, DefaultEventManager>, ContainerType>
 {
   protected:
     T value_;
@@ -126,11 +140,11 @@ struct BufferedValue : public IValueT<T, BufferedValue<T, BufferType, ContainerT
     template<typename... Args>
     explicit BufferedValue(Args && ... args) : value_(std::forward<Args>(args)...) {}
 
-    template<typename X>
-    void changeTo(X && x)
+    template<typename X, typename EventManager = DefaultEventManager>
+    void changeTo(X && x, EventManager em = EventManager{})
     {
       buffer_.emplace_back(std::forward<X>(x));
-      IValue<EventManager>::enqueueChange();
+      this->enqueueChangeWith(em);
     }
 
     T const & now() const
