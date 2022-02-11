@@ -5,13 +5,13 @@ changes can be observed (e.g. basically change event handlers) by
 other code.
 
 The observers / event handlers are not directly called, but rather
-the change event is notified to a (user defined) event manager.
+the change event is notified to a (user defined) change manager.
 This manager can, for example, run on another thread. It will call
 all the registered observers.
 
 Apart from a simple value class (which is directly changed) there's
 also a BufferedValue class available, which allows for changes to be
-committed only on the event manager thread and for the observers to
+committed only on the change manager (thread) and for the observers to
 both see the "old" and the "new" values.
 
 Additionally, there's a Lazy class thrown in for lazy evaluation,
