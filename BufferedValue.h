@@ -37,9 +37,8 @@ protected:
 
   /// \brief Called after all observers are done, completes the change.
   ///
-  /// This function is called by the change manager after all observers have
-  /// been called. This can be either all observers of this value, or all of a
-  /// "set" of value changes, depending on the change manager implementation.
+  /// This function is called by IValueT::handleChange after all observers
+  /// of this value have been called.
   ///
   virtual void completeChange() override {
     value_ = then();
