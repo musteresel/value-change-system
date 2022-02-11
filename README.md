@@ -19,6 +19,8 @@ it works nicely with the rest of the system: The change events "push"
 the information about changed values, the lazy evaluation "pulls"
 the actual values when (and only if) they are needed.
 
+([see example.cc](./example.cc))
+
 ~~~
 Change to
   |
