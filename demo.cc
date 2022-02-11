@@ -23,12 +23,7 @@ struct EventManager {
   void handleChanges() {
     for (auto v : changes_) {
       v->handleChange();
-      v->completeChange();
     }
-    //for (auto v : changes_) {
-    //  std::cout << "Complete change of " << v << std::endl;
-    //  v->completeChange();
-    //}
     changes_.clear();
   }
 };

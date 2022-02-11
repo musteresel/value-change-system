@@ -97,7 +97,12 @@ protected:
     for (IObserver *const o : observers_) {
       o->onChange(reinterpret_cast<Self &>(*this));
     }
+    completeChange();
   }
+
+  /// \brief Complete a change, called after all changes have been handled.
+  ///
+  virtual void completeChange(){};
 
   /// \brief Storage of pointers to observers, non-owning.
   ///

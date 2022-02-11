@@ -12,10 +12,6 @@ struct IValue {
   ///
   virtual void handleChange() = 0;
 
-  /// \brief Complete a change, called after all changes have been handled.
-  ///
-  virtual void completeChange(){};
-
 protected:
   /// \brief Called by concrete subclasses to actually work with the
   /// ChangeManager.
